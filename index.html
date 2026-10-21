@@ -609,6 +609,9 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
   #viewPanel .vp-sep { width: 40px; background: rgba(255,255,255,.6); }
   body.detail-open #viewPanel { display: none !important; }
   body.works-open #viewPanel { display: none !important; }
+  #intro .ed-grid { gap: 14px; }
+  #intro .ed-main { height: auto; width: 100%; max-width: 100%; }
+  #viewer .dx-tab, #viewer .dx-tab[aria-pressed="true"], #viewer .dx-tab:hover, #viewer .dx-tab:focus { background: #fff !important; color: #111 !important; border: 1px solid #111 !important; }
 }
 </style>
 </head>
@@ -38407,8 +38410,29 @@ viewPanel.addEventListener("click", (e) => {
   if (b.dataset.v === "home") resetView();
   else flyView(b.dataset.v);
 });
+var touchDblAt = 0;
+(() => {
+  let lt = 0, lx = 0, ly = 0;
+  renderer.domElement.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length !== 1 || editing) return;
+    const t = e.changedTouches[0], now = performance.now();
+    if (now - lt < 320 && Math.hypot(t.clientX - lx, t.clientY - ly) < 30) {
+      lt = 0;
+      touchDblAt = now;
+      const pt = { clientX: t.clientX, clientY: t.clientY };
+      const id = pickId(pt.clientX, pt.clientY);
+      if (!id) { flyToFloor(pt); return; }
+      lastPicked = id;
+      if (viewBack && viewBackId === id && performance.now() - zoomedAt > 700) { zoomOut(); return; }
+      zoomIn(id);
+    } else {
+      lt = now; lx = t.clientX; ly = t.clientY;
+    }
+  }, { passive: true });
+})();
 renderer.domElement.addEventListener("dblclick", (e) => {
   if (editing) return;
+  if (performance.now() - touchDblAt < 700) return;
   const id = pickId(e.clientX, e.clientY);
   if (!id) {
     flyToFloor(e);
