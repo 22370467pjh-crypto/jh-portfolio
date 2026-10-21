@@ -136,8 +136,8 @@ body.win-open #viewPanel { display: none; }
 .dot-live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #111; margin-right: 8px; vertical-align: middle; animation: dotBlink 1.6s ease-in-out infinite; }
 @keyframes dotBlink { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
 /* 타이핑 등장: 스크롤에 맞춰 글자가 하나씩 나타납니다 */
-#intro .tc { opacity: 0; filter: blur(3px); transition: opacity .18s ease, filter .3s ease; }
-#intro .tc.on { opacity: 1; filter: none; }
+#intro .tc { opacity: 0; transition: opacity .18s ease; }
+#intro .tc.on { opacity: 1; }
 #intro .tc.cur::after { content: '▍'; margin-left: 1px; font-weight: 400; animation: caretBlink .9s steps(2, start) infinite; }
 @keyframes caretBlink { to { opacity: 0; } }
 #intro .gl-hover:hover, #intro .ed-index button:hover { animation: otGlitch .45s steps(2, end) 1; }
@@ -514,7 +514,7 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
 /* 마지막 섹션: 작품 이미지(스크롤하면 선명해짐) + PARK JUN HEE 글자 */
 #intro .outro { background: #000; color: #fff; margin: 64px -20px 0; padding: 56px 20px 36px; overflow: hidden; }
 #intro .ot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-#intro .ot-img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; opacity: 0.12; filter: blur(10px); will-change: opacity, filter; }
+#intro .ot-img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; opacity: 0.12; will-change: opacity; }
 #intro .ot-word { margin-top: 56px; display: flex; justify-content: space-between; align-items: baseline; font-family: 'Inter', 'Noto Sans KR', sans-serif; font-weight: 800; font-size: clamp(40px, 11vw, 150px); line-height: 0.9; letter-spacing: -0.05em; white-space: nowrap; text-transform: uppercase; }
 #intro .ot-word span { display: inline-block; will-change: transform; }
 /* 작품 섹션: 사진을 자유롭게 흩어 놓고 길게 스크롤 */
@@ -522,7 +522,7 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
 @media (max-width: 760px) { #intro .outro { --k: 1.6; } }
 #intro .ot-area { position: relative; width: 100%; }
 #intro .ot-grid { display: none; }
-#intro .ot-img { position: absolute; display: block; width: calc(var(--w) * var(--k, 1) * 1%); left: calc((100% - var(--w) * var(--k, 1) * 1%) * var(--x)); top: var(--y); height: auto; aspect-ratio: 4 / 3; object-fit: cover; opacity: 0.12; filter: blur(10px); will-change: opacity, filter; }
+#intro .ot-img { position: absolute; display: block; width: calc(var(--w) * var(--k, 1) * 1%); left: calc((100% - var(--w) * var(--k, 1) * 1%) * var(--x)); top: var(--y); height: auto; aspect-ratio: 4 / 3; object-fit: cover; opacity: 0.12; will-change: opacity; }
 #intro .ot-word { margin-top: 24px; }
 /* 작품 섹션: 흰 배경, 검은 글자, 소개 문장 */
 #intro .outro { background: #fff; color: #111; }
@@ -37668,18 +37668,28 @@ function typeNote(sec, vh, base, sel2) {
   if (note._cur) note._cur.classList.add("cur");
   note._count = count;
 }
+let _outroRaf = 0;
 function paintOutro() {
+  if (_outroRaf) return;
+  _outroRaf = requestAnimationFrame(() => { _outroRaf = 0; paintOutroNow(); });
+}
+function paintOutroNow() {
   const sec = feedEl.querySelector("#outro");
   if (!sec || !introEl) return;
   const vh = introEl.clientHeight || innerHeight;
   const base = introEl.getBoundingClientRect().top;
   typeNote(sec, vh, base, ".ot-note");
   typeNote(sec, vh, base, ".ot-long");
-  sec.querySelectorAll(".ot-img").forEach((im) => {
+  const oImgs = [...sec.querySelectorAll(".ot-img")];
+  const oQ = oImgs.map((im) => {
     const top2 = im.getBoundingClientRect().top - base;
-    const q = Math.min(1, Math.max(0, (vh - top2) / (vh * 0.8)));
-    im.style.opacity = (0.12 + 0.88 * q).toFixed(3);
-    im.style.filter = `blur(${((1 - q) * 10).toFixed(1)}px)`;
+    return Math.min(1, Math.max(0, (vh - top2) / (vh * 0.8)));
+  });
+  oImgs.forEach((im, i) => {
+    const q = oQ[i];
+    const op = (0.12 + 0.88 * q).toFixed(2);
+    const bl = String(Math.round((1 - q) * 10));
+    if (im._op !== op) { im.style.opacity = op; im._op = op; }
   });
   const wEl = sec.querySelector(".ot-word");
   const top = (wEl ? wEl.getBoundingClientRect().top : sec.getBoundingClientRect().top) - base;
@@ -37755,7 +37765,9 @@ document.addEventListener("click", (e) => {
   if (t.classList.contains("vx-mute")) v.muted = !v.muted;
   else if (t.classList.contains("vx-full")) {
     if (document.fullscreenElement) document.exitFullscreen();
+    else if (/iPhone|iPod|iPad/.test(navigator.userAgent) && v.webkitEnterFullscreen) v.webkitEnterFullscreen();
     else if (w.requestFullscreen) w.requestFullscreen().catch(() => {
+      if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
     });
   } else if (v.paused) v.play().catch(() => {
   });
