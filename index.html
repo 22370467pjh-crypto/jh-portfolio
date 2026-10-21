@@ -589,27 +589,25 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
   outline: 2px solid var(--ui-ink); outline-offset: 2px;
 }
 
-/* ===== 모바일 전용 수정 (데스크톱은 그대로) ===== */
+/* ===== 모바일 전용 수정 ===== */
 @media (max-width: 760px) {
-  /* 1) 긴 소개 글씨 크기 줄이기 */
   #intro .intro-text { font-size: 16px !important; line-height: 1.55 !important; }
   #intro .ot-note { font-size: 14px !important; line-height: 1.6 !important; }
   #intro .ot-en { font-size: 14px !important; }
   #intro .ot-ko { font-size: 15px !important; }
-  /* 2) 초록 아이콘처럼 보이는 ✳ 장식 숨기기 */
   .ft-marq-in span::after { content: none !important; }
   #winFlow .wf-cat.on::before { content: none !important; }
   .m-ast { display: none !important; }
-  /* 3) 작품 목록(번호 리스트)을 작품 이미지 위로 */
   #intro .ed-index { order: -2; }
   #intro .ed-stage { order: -1; }
-  /* 4) 구석 버튼 배치: 왼쪽 위 작품 목록 / 오른쪽 위 메인페이지 / 왼쪽 아래 뷰 버튼 / 오른쪽 아래 조작 패드 */
   body.in-world #toMainNav { top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; left: auto; right: 12px; width: auto; justify-content: flex-end; }
   body.in-world #toMainNav .nav button, #toMainNav button { font-size: 11px !important; padding: 5px 10px !important; }
   #viewPanel { left: 12px; right: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
   #viewPanel .vp-list { width: auto; gap: 4px; }
-  #viewPanel .vp-list button { width: auto !important; padding: 4px 9px !important; font-size: 10px !important; }
-  #viewPanel .vp-sep { width: 40px; }
+  #viewPanel .vp-list button { width: auto !important; padding: 4px 9px !important; font-size: 10px !important; background: transparent !important; color: #fff !important; border: 1px solid rgba(255,255,255,.75) !important; text-shadow: 0 1px 4px rgba(0,0,0,.55); box-shadow: none !important; }
+  #viewPanel .vp-list button:hover, #viewPanel .vp-list button:active { background: rgba(255,255,255,.18) !important; color: #fff !important; }
+  #viewPanel .vp-sep { width: 40px; background: rgba(255,255,255,.6); }
+  body.detail-open #viewPanel { display: none !important; }
 }
 </style>
 </head>
@@ -35245,8 +35243,10 @@ function showArt(id) {
   if (!it) return;
   detailId = id;
   dxOpen = false;
+  detailLang = "ko";
   renderDetail(it.data);
   viewer.hidden = false;
+  resetScrollOf();
   if (!(viewBack && viewBackId === id)) zoomIn(id);
 }
 function hideViewer() {
@@ -37621,7 +37621,7 @@ function buildOutro() {
     "There are things we feel before we can put them into words. I carefully translate those feelings into color, form, and empty space. The translation always drifts a little, and out of that drift a mood emerges that did not exist before. That is why I leave space before I offer explanation.",
     "Even after a painting ends, an afterimage remains. I hope it settles quietly somewhere in the viewer\u2019s heart, and that in that open space, each person\u2019s own story slowly grows."
   ].map((t) => `<p>${t}</p>`).join("");
-  return `<section class="outro" id="outro"><div class="ot-area" style="height:${H}vh">${imgs}${note}<span class="pt pt-tl">Index 01 \u2014 ${String(n).padStart(2, "0")}</span><span class="pt pt-tr">Scroll \u2193</span><span class="pt pt-bl">Mood \xB7 Light \xB7 Motion</span><span class="pt pt-br">Vol.01 \u2014 2026 \u2733</span></div><div class="ot-long">${longHtml}</div><div class="ot-word"><span class="ot-l">PARK</span><span class="ot-r">JUN HEE</span></div></section>`;
+  return `<section class="outro" id="outro"><div class="ot-area" style="height:${H}vh">${imgs}${note}<span class="pt pt-tl">Index 01 \u2014 ${String(n).padStart(2, "0")}</span><span class="pt pt-tr">Scroll \u2193</span><span class="pt pt-bl">Mood \xB7 Light \xB7 Motion</span><span class="pt pt-br">Vol.01 \u2014 2026 <span class="m-ast">\u2733</span></span></div><div class="ot-long">${longHtml}</div><div class="ot-word"><span class="ot-l">PARK</span><span class="ot-r">JUN HEE</span></div></section>`;
 }
 function typeNote(sec, vh, base, sel2) {
   const note = sec.querySelector(sel2);
@@ -37891,6 +37891,7 @@ function paintWork(mode) {
   }
 }
 function openWork(i, rect, srcIdx = -1) {
+  winWork.querySelector(".wk-info").scrollTop = 0;
   wkIdx = i;
   wkSrcIdx = srcIdx;
   feedActive = i;
@@ -38092,6 +38093,36 @@ toMainBtn.type = "button";
 toMainBtn.textContent = "\uBA54\uC778\uD398\uC774\uC9C0";
 toMainNav.appendChild(toMainBtn);
 document.body.appendChild(toMainNav);
+function resetScrollOf() {
+  viewer.scrollTop = 0;
+  const w = document.querySelector("#works");
+  if (w) w.scrollTop = 0;
+  const wi = winWork.querySelector(".wk-info");
+  if (wi) wi.scrollTop = 0;
+}
+function closeAllPanels(opts) {
+  const keepWorks = !!(opts && opts.keepWorks);
+  if (winWork.classList.contains("show")) closeWork();
+  if (winFlow.classList.contains("show")) closeFlow();
+  viewer.hidden = true;
+  viewBack = null;
+  viewBackId = null;
+  detailId = null;
+  dxOpen = false;
+  detailLang = "ko";
+  if (!keepWorks) $("#works").hidden = true;
+  if (workTab) { workTab = ""; refreshWorks(); }
+  resetScrollOf();
+}
+new MutationObserver(() => document.body.classList.toggle("detail-open", !viewer.hidden)).observe(viewer, { attributes: true, attributeFilter: ["hidden"] });
+document.addEventListener("pointerdown", (e) => {
+  if (e.target.closest && e.target.closest("#pad, #viewPanel, #toMainNav")) closeAllPanels();
+}, true);
+document.addEventListener("click", (e) => {
+  if (!e.target.closest) return;
+  if (e.target.closest("#btnWorks")) { if ($("#works").hidden) closeAllPanels({ keepWorks: true }); return; }
+  if (e.target.closest("#pad, #viewPanel, #toMainNav")) closeAllPanels();
+}, true);
 function backToMain() {
   if (!introEl || !introEl.classList.contains("intro-hide")) return;
   viewer.hidden = true;
@@ -38325,6 +38356,7 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   }
 });
 function flyToFloor(e) {
+  closeAllPanels();
   const rect = renderer.domElement.getBoundingClientRect();
   const ndc2 = new Vector2((e.clientX - rect.left) / rect.width * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
   raycaster.setFromCamera(ndc2, camera);
