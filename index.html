@@ -604,10 +604,11 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
   body.in-world #toMainNav .nav button, #toMainNav button { font-size: 11px !important; padding: 5px 10px !important; }
   #viewPanel { left: 12px; right: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
   #viewPanel .vp-list { width: auto; gap: 4px; }
-  #viewPanel .vp-list button { width: auto !important; padding: 4px 9px !important; font-size: 10px !important; background: transparent !important; color: #fff !important; border: 1px solid rgba(255,255,255,.75) !important; text-shadow: 0 1px 4px rgba(0,0,0,.55); box-shadow: none !important; }
+  #viewPanel .vp-list button { width: auto !important; padding: 4px 9px !important; font-size: 10px !important; background: transparent !important; color: #fff !important; border: 0 !important; text-shadow: 0 1px 4px rgba(0,0,0,.55); box-shadow: none !important; }
   #viewPanel .vp-list button:hover, #viewPanel .vp-list button:active { background: rgba(255,255,255,.18) !important; color: #fff !important; }
   #viewPanel .vp-sep { width: 40px; background: rgba(255,255,255,.6); }
   body.detail-open #viewPanel { display: none !important; }
+  body.works-open #viewPanel { display: none !important; }
 }
 </style>
 </head>
@@ -35229,7 +35230,7 @@ function dxFollow() {
   viewer.style.top = top + "px";
 }
 function dxLoop() {
-  if (winWork.classList.contains("show") || (innerWidth <= 760 && !viewer.hidden)) dxFollow();
+  if (winWork.classList.contains("show") || !viewer.hidden) dxFollow();
   requestAnimationFrame(dxLoop);
 }
 requestAnimationFrame(dxLoop);
@@ -35246,6 +35247,7 @@ function showArt(id) {
   detailLang = "ko";
   renderDetail(it.data);
   viewer.hidden = false;
+  $("#works").hidden = true;
   resetScrollOf();
   if (!(viewBack && viewBackId === id)) zoomIn(id);
 }
@@ -38115,6 +38117,7 @@ function closeAllPanels(opts) {
   resetScrollOf();
 }
 new MutationObserver(() => document.body.classList.toggle("detail-open", !viewer.hidden)).observe(viewer, { attributes: true, attributeFilter: ["hidden"] });
+new MutationObserver(() => document.body.classList.toggle("works-open", !$("#works").hidden)).observe($("#works"), { attributes: true, attributeFilter: ["hidden"] });
 document.addEventListener("pointerdown", (e) => {
   if (e.target.closest && e.target.closest("#pad, #viewPanel, #toMainNav")) closeAllPanels();
 }, true);
@@ -38227,6 +38230,9 @@ document.addEventListener("keydown", (e) => {
   });
 })();
 $("#vClose").addEventListener("click", () => {
+  dxOpen = false;
+  detailLang = "ko";
+  resetScrollOf();
   hideViewer();
   zoomOut();
 });
