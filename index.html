@@ -588,6 +588,29 @@ body:not(.editing) #btnStyle, body:not(.editing) #styler { display: none !import
 .dx-bar button:focus-visible, #viewer .dx-tab:focus-visible, #side button:focus-visible, #txPanel .tx-btns button:focus-visible, #sxReset:focus-visible {
   outline: 2px solid var(--ui-ink); outline-offset: 2px;
 }
+
+/* ===== 모바일 전용 수정 (데스크톱은 그대로) ===== */
+@media (max-width: 760px) {
+  /* 1) 긴 소개 글씨 크기 줄이기 */
+  #intro .intro-text { font-size: 16px !important; line-height: 1.55 !important; }
+  #intro .ot-note { font-size: 14px !important; line-height: 1.6 !important; }
+  #intro .ot-en { font-size: 14px !important; }
+  #intro .ot-ko { font-size: 15px !important; }
+  /* 2) 초록 아이콘처럼 보이는 ✳ 장식 숨기기 */
+  .ft-marq-in span::after { content: none !important; }
+  #winFlow .wf-cat.on::before { content: none !important; }
+  .m-ast { display: none !important; }
+  /* 3) 작품 목록(번호 리스트)을 작품 이미지 위로 */
+  #intro .ed-index { order: -2; }
+  #intro .ed-stage { order: -1; }
+  /* 4) 구석 버튼 배치: 왼쪽 위 작품 목록 / 오른쪽 위 메인페이지 / 왼쪽 아래 뷰 버튼 / 오른쪽 아래 조작 패드 */
+  body.in-world #toMainNav { top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; left: auto; right: 12px; width: auto; justify-content: flex-end; }
+  body.in-world #toMainNav .nav button, #toMainNav button { font-size: 11px !important; padding: 5px 10px !important; }
+  #viewPanel { left: 12px; right: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+  #viewPanel .vp-list { width: auto; gap: 4px; }
+  #viewPanel .vp-list button { width: auto !important; padding: 4px 9px !important; font-size: 10px !important; }
+  #viewPanel .vp-sep { width: 40px; }
+}
 </style>
 </head>
 <body>
@@ -35208,7 +35231,7 @@ function dxFollow() {
   viewer.style.top = top + "px";
 }
 function dxLoop() {
-  if (winWork.classList.contains("show")) dxFollow();
+  if (winWork.classList.contains("show") || (innerWidth <= 760 && !viewer.hidden)) dxFollow();
   requestAnimationFrame(dxLoop);
 }
 requestAnimationFrame(dxLoop);
@@ -37556,7 +37579,7 @@ function renderFeed() {
         <div><h4>Contact</h4><ul><li><a class="ft-link" href="mailto:22370467pjh@gmail.com">Email</a></li><li><a class="ft-link" href="https://www.instagram.com/zcmmmt/" target="_blank" rel="noopener">Instagram</a></li><li><span>Design account</span></li></ul></div>
         <div><h4>Project</h4><ul><li><span>Project intro</span></li><li><span>Progress</span></li><li><a class="ft-link" href="mailto:22370467pjh@gmail.com">Get in touch</a></li></ul></div>
       </div>
-      <div class="ft-bot"><span>\xA9 2026 park junhee</span><span class="pt-inline">Made with light &amp; motion \u2733</span><button type="button" class="ft-link" data-act="top">Back to top \u2191</button></div>
+      <div class="ft-bot"><span>\xA9 2026 park junhee</span><span class="pt-inline">Made with light &amp; motion <span class="m-ast">\u2733</span></span><button type="button" class="ft-link" data-act="top">Back to top \u2191</button></div>
     </div></footer>
 `;
   paintFeed();
